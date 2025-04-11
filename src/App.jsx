@@ -1,34 +1,40 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react"
+import Planner from "./components/Planner"
+import ExerciseList from "./components/ExerciseList"
+import exercises from "./data/exercises"
 
 function App() {
-  const [count, setCount] = useState(0)
+
+
+
+  const [routine,setRoutine] = useState({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+
+  })
+
+
+  const handleAddExercise = (day,exercise) => {
+    setRoutine((prev) => ({
+      ...prev, 
+      [day]: [...prev[day],exercise],
+    }))
+  }
+  
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="p-4 font-sans min-h-screen bg-gray-100">
+<h1 className="text-3xl font-bold text-center mb-6">🏋️ Workout Routine Builder</h1>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
+  <ExerciseList exercises={exercises} onAddExercise={handleAddExercise}/>
+<Planner routine={routine}/> 
+</div>
+    </div>
   )
 }
 
