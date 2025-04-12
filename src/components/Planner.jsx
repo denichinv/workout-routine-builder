@@ -1,4 +1,4 @@
-export default function Planner ({routine}){
+export default function Planner ({routine,handleRemove}){
     return(
         <div className="bg-white rounded-xl p-4 shadow">
             <h2 className="text-xl font-semibold mb-4">Weekly Plan</h2>
@@ -11,7 +11,11 @@ export default function Planner ({routine}){
                             <p className="text-sm text-gray-500 text-center">No exercises</p>
                         ) : (
                             exercises.map((ex,index) => (
-                                <p key={index} className="text-sm mb-1">{ex.name}</p>
+                                <div className="flex justify-between ">
+                                <p key={index} className="text-sm mb-1">{ex.name}</p> 
+                                <button className="text-xs pb-1.5" onClick={() => handleRemove(day,index)}>❌</button>
+                                </div>
+                                
                             ))
                         )}
                         </div>

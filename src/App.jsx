@@ -25,6 +25,14 @@ function App() {
       [day]: [...prev[day],exercise],
     }))
   }
+
+  const handleRemove = (day,index) => {
+    setRoutine((prev) => ({
+      ...prev,
+      [day]: prev[day].filter((_,i) => i!==index)
+    }))
+
+  }
   
 
   return (
@@ -32,7 +40,7 @@ function App() {
 <h1 className="text-3xl font-bold text-center mb-6">🏋️ Workout Routine Builder</h1>
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
   <ExerciseList exercises={exercises} onAddExercise={handleAddExercise}/>
-<Planner routine={routine}/> 
+<Planner routine={routine} handleRemove={handleRemove}/> 
 </div>
     </div>
   )
