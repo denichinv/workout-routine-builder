@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Planner from "./components/Planner"
 import ExerciseList from "./components/ExerciseList"
 import exercises from "./data/exercises"
@@ -7,7 +7,23 @@ function App() {
 
 
 
-  const [routine,setRoutine] = useState({
+  const [routine,setRoutine] = useState(() => {
+
+    const saved = localStorage.getItem('weekly-plan')
+
+    if(saved){
+
+      return(
+        JSON.parse(saved)
+      )
+
+    }
+else{
+
+return(
+
+     {
+
     Monday: [],
     Tuesday: [],
     Wednesday: [],
@@ -16,6 +32,13 @@ function App() {
     Saturday: [],
     Sunday: [],
 
+     } 
+    )
+   
+
+
+}
+    
   })
 
 
@@ -33,8 +56,10 @@ function App() {
     }))
 
   }
-  
-
+useEffect(() => {
+  const stringData = JSON.stringify(routine)
+  localStorage.setItem('weekly-plan', stringData)
+},[routine])
   return (
     <div className="p-4 font-sans min-h-screen bg-gray-100">
 <h1 className="text-3xl font-bold text-center mb-6">🏋️ Workout Routine Builder</h1>
