@@ -19,7 +19,11 @@ export default function ExerciseList({exercises, onAddExercise, onAddCustomExerc
         </h2>
         {exercises.map((ex) => (
             <div key={ex.id} className="flex not-only:justify-between items-center mb-2">
-                <span>{ex.name}</span>
+                <div className="flex justify-between items-center group hover:text-xl">
+
+                <p className="">{ex.name}</p>
+                <button    className="text-red-500 text-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity mx-1">❌</button>
+                </div>
                 <select className="border p-1 rounded focus:border-blue-300" onChange={(e) => {
                     const day = e.target.value;
                     if(day) onAddExercise(day,ex)
