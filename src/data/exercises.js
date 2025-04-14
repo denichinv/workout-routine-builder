@@ -1,4 +1,4 @@
-const exercises = [
+const defaultExercises = [
   { id: 1, name: 'Push-ups' },
   { id: 2, name: 'Squats' },
   { id: 3, name: 'Lunges' },
@@ -7,4 +7,4 @@ const exercises = [
   { id: 6, name: 'Pull-ups' },
 ];
 
-export default exercises;
+export default defaultExercises;
