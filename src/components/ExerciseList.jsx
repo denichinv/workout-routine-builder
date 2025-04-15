@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function ExerciseList({exercises, onAddExercise, onAddCustomExercise}){
+export default function ExerciseList({exercises, onAddExercise, onAddCustomExercise, onDeleteExercise }){
     
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -11,6 +11,9 @@ export default function ExerciseList({exercises, onAddExercise, onAddCustomExerc
         onAddCustomExercise(customExercise)
         setCustomExercise("")
     }
+
+
+    
   }
   return(
     <div className="bg-white rounded-xl p-4 shadow">
@@ -19,10 +22,10 @@ export default function ExerciseList({exercises, onAddExercise, onAddCustomExerc
         </h2>
         {exercises.map((ex) => (
             <div key={ex.id} className="flex not-only:justify-between items-center mb-2">
-                <div className="flex justify-between items-center group hover:text-xl">
+                <div className="flex justify-between items-center group ">
 
                 <p className="">{ex.name}</p>
-                <button    className="text-red-500 text-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity mx-1">❌</button>
+                <button    className="text-red-500 text-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity mx-1" onClick={() => onDeleteExercise(ex.id)}>❌</button>
                 </div>
                 <select className="border p-1 rounded focus:border-blue-300" onChange={(e) => {
                     const day = e.target.value;
@@ -42,7 +45,7 @@ export default function ExerciseList({exercises, onAddExercise, onAddCustomExerc
 
     <div className="flex gap-2">
           <input className="border rounded-lg px-3 py-1 focus:outline-none focus:ring focus:border-blue-300" type="text" value={customExercise} onChange={(e) => setCustomExercise(e.target.value)} />
-       <button className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition-all" onClick={handleAdd}>Add</button>
+       <button className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 active:bg-gradient-to-r from-blue-500 to-blue-300 transition-all" onClick={handleAdd}>Add</button>
     </div>
       
     </div>
