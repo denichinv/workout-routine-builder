@@ -102,7 +102,7 @@ function App() {
               onDeleteExercise={onDeleteExercise}
             />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <Planner
               routine={routine}
               handleRemove={handleRemove}
