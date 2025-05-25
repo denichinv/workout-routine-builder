@@ -1,12 +1,29 @@
-# React + Vite
+# 🏋️ Workout Routine Builder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple and elegant React app that helps you plan your weekly workout routine. Choose exercises, assign them to specific days, and customize sets and reps – all saved locally in your browser.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 📚 Searchable exercise library
+- ➕ Add your own custom exercises
+- 🔢 Customize sets and reps for each exercise
+- 💾 Data saved in `localStorage` – no login required
 
-## Expanding the ESLint configuration
+## 📸 Preview
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+![App Preview](./screenshot.png)
+
+## 🛠️ Tech Stack
+
+- **React** with functional components and hooks
+- **Tailwind CSS** for modern UI
+- **LocalStorage** for persistent data
+
+## 📦 Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/denichinv/workout-routine-builder.git
+cd workout-routine-builder
+```
