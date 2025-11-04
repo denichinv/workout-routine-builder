@@ -95,7 +95,6 @@ describe("Planner Component", () => {
     expect(screen.getAllByText("Pull-Ups")).toHaveLength(3);
     expect(screen.getAllByText("Sit-Ups")).toHaveLength(3);
 
-    // Verify Sets and Reps labels exist
     expect(screen.getAllByText("Sets").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Reps").length).toBeGreaterThan(0);
   });
