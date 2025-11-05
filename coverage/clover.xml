@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1762369040333" clover="3.2.0">
+  <project timestamp="1762369040333" name="All files">
+    <metrics statements="63" coveredstatements="37" conditionals="26" coveredconditionals="15" methods="37" coveredmethods="15" elements="126" coveredelements="67" complexity="0" loc="63" ncloc="63" packages="3" files="4" classes="4"/>
+    <package name="src">
+      <metrics statements="28" coveredstatements="16" conditionals="4" coveredconditionals="2" methods="17" coveredmethods="5"/>
+      <file name="App.jsx" path="/Users/Vilizar/Desktop/GITHUB PROJECTS/workout-routine-builder/src/App.jsx">
+        <metrics statements="28" coveredstatements="16" conditionals="4" coveredconditionals="2" methods="17" coveredmethods="5"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="15" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+        <line num="44" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="57" count="0" type="stmt"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="64" count="0" type="stmt"/>
+        <line num="67" count="1" type="stmt"/>
+        <line num="68" count="0" type="stmt"/>
+        <line num="69" count="0" type="stmt"/>
+        <line num="70" count="0" type="stmt"/>
+        <line num="74" count="1" type="stmt"/>
+        <line num="75" count="1" type="stmt"/>
+        <line num="78" count="1" type="stmt"/>
+        <line num="79" count="1" type="stmt"/>
+        <line num="82" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.components">
+      <metrics statements="34" coveredstatements="20" conditionals="22" coveredconditionals="13" methods="20" coveredmethods="10"/>
+      <file name="ExerciseList.jsx" path="/Users/Vilizar/Desktop/GITHUB PROJECTS/workout-routine-builder/src/components/ExerciseList.jsx">
+        <metrics statements="26" coveredstatements="15" conditionals="14" coveredconditionals="6" methods="13" coveredmethods="6"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="26" count="6" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="6" type="stmt"/>
+        <line num="34" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="36" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="40" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="70" count="5" type="stmt"/>
+        <line num="77" count="0" type="stmt"/>
+        <line num="90" count="6" type="stmt"/>
+        <line num="99" count="0" type="stmt"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="122" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="123" count="0" type="stmt"/>
+        <line num="128" count="42" type="stmt"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="152" count="0" type="cond" truecount="0" falsecount="2"/>
+      </file>
+      <file name="Planner.jsx" path="/Users/Vilizar/Desktop/GITHUB PROJECTS/workout-routine-builder/src/components/Planner.jsx">
+        <metrics statements="8" coveredstatements="5" conditionals="8" coveredconditionals="7" methods="7" coveredmethods="4"/>
+        <line num="2" count="6" type="stmt"/>
+        <line num="3" count="42" type="stmt"/>
+        <line num="7" count="6" type="stmt"/>
+        <line num="22" count="42" type="stmt"/>
+        <line num="58" count="18" type="stmt"/>
+        <line num="68" count="0" type="stmt"/>
+        <line num="98" count="0" type="stmt"/>
+        <line num="112" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.data">
+      <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="exercises.js" path="/Users/Vilizar/Desktop/GITHUB PROJECTS/workout-routine-builder/src/data/exercises.js">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="2" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

@@ -1,5 +1,6 @@
 import Planner from "./Planner";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 // Mock data
 const emptyRoutine = {
@@ -97,5 +98,71 @@ describe("Planner Component", () => {
 
     expect(screen.getAllByText("Sets").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Reps").length).toBeGreaterThan(0);
+  });
+
+  // User Events Tests
+
+  test("calls handleRemove when remove button is clicked", async () => {
+    const mockHandleRemove = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <Planner
+        routine={routineWithExercises}
+        handleRemove={mockHandleRemove}
+        onChange={() => {}}
+      />
+    );
+
+    const removeButtons = screen.getAllByLabelText("Remove exercise");
+    await user.click(removeButtons[0]);
+    expect(mockHandleRemove).toHaveBeenCalled();
+  });
+
+  test("calls onChange when sets input is changed", async () => {
+    const mockOnChange = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <Planner
+        routine={routineWithExercises}
+        handleRemove={() => {}}
+        onChange={mockOnChange}
+      />
+    );
+
+    const setFields = screen.getAllByLabelText("Sets");
+    const firstSetInput = setFields[0];
+    await user.clear(firstSetInput);
+    await user.type(firstSetInput, "5");
+    expect(mockOnChange).toHaveBeenLastCalledWith(
+      "Monday",
+      0,
+      "sets",
+      expect.any(String)
+    );
+  });
+
+  test("calls onChange when reps input is changed", async () => {
+    const mockOnChange = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <Planner
+        routine={routineWithExercises}
+        handleRemove={() => {}}
+        onChange={mockOnChange}
+      />
+    );
+
+    const repsFields = screen.getAllByLabelText("Reps");
+    await userEvent.clear(repsFields[0]);
+    await userEvent.type(repsFields[0], "5");
+    expect(mockOnChange).toHaveBeenLastCalledWith(
+      "Monday",
+      0,
+      "reps",
+      expect.any(String)
+    );
   });
 });

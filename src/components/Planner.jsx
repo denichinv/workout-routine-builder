@@ -87,10 +87,14 @@ export default function Planner({ routine, handleRemove, onChange }) {
 
                         <div className="flex gap-2 items-center">
                           <div className="flex-1">
-                            <label className="block text-xs text-gray-500 mb-1">
+                            <label
+                              htmlFor={`sets-${day}-${index}`}
+                              className="block text-xs text-gray-500 mb-1"
+                            >
                               Sets
                             </label>
                             <input
+                              id={`sets-${day}-${index}`}
                               type="number"
                               min="1"
                               value={ex.sets}
@@ -101,10 +105,14 @@ export default function Planner({ routine, handleRemove, onChange }) {
                             />
                           </div>
                           <div className="flex-1">
-                            <label className="block text-xs text-gray-500 mb-1">
+                            <label
+                              htmlFor={`reps-${day}-${index}`}
+                              className="block text-xs text-gray-500 mb-1"
+                            >
                               Reps
                             </label>
                             <input
+                              id={`reps-${day}-${index}`}
                               type="number"
                               min="1"
                               value={ex.reps}
