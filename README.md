@@ -1,5 +1,6 @@
 # 🏋️ Workout Routine Builder
 
+![Tests](https://github.com/denichinv/workout-routine-builder/actions/workflows/test.yml/badge.svg)
 ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
 A simple and elegant React app that helps you plan your weekly workout routine. Choose exercises, assign them to specific days, and customize sets and reps – all saved locally in your browser.
