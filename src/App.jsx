@@ -79,42 +79,62 @@ function App() {
     localStorage.setItem("custom-exercises", JSON.stringify(exercises));
   }, [exercises]);
 
+  const trainingDays = Object.values(routine).filter(
+    (day) => day.length > 0,
+  ).length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
-      <div className="container mx-auto p-4 md:p-6">
-        <header className="text-center py-6 mb-8">
-          <h1 className="text-4xl font-bold text-indigo-800 mb-2">
-            <span className="inline-block mr-2 transform -rotate-12">🏋️</span>
-            Workout Routine Builder
-          </h1>
-          <p className="text-gray-600 max-w-lg mx-auto">
-            Create your custom weekly workout plan by adding exercises to
-            specific days
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 gap-6">
-          <div className="lg:col-span-1">
-            <ExerciseList
-              exercises={exercises}
-              onAddExercise={handleAddExercise}
-              onAddCustomExercise={onAddCustomExercise}
-              onDeleteExercise={onDeleteExercise}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <Planner
-              routine={routine}
-              handleRemove={handleRemove}
-              onChange={handleRoutineChange}
-            />
-          </div>
+    <div className="app-shell">
+      <a className="skip-link" href="#weekly-plan">
+        Skip to weekly plan
+      </a>
+      <header className="app-header">
+        <div className="wordmark" aria-label="Workout Routine Builder">
+          <span className="brand-mark" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          WORKOUT<span className="wordmark-light"> / ROUTINE BUILDER</span>
         </div>
-
-        <footer className="text-center text-gray-500 text-sm mt-12 pb-6">
-          Your workout data is saved automatically in your browser
-        </footer>
-      </div>
+        <span className="storage-note">Stored on this device</span>
+      </header>
+      <main>
+        <section className="page-intro" aria-labelledby="page-title">
+          <div>
+            <p className="eyebrow">YOUR TRAINING, PLANNED.</p>
+            <h1 id="page-title">Workout Routine Builder</h1>
+            <p className="intro-copy">
+              Build a week you can stick to. Choose your movements, set your
+              reps, make it yours.
+            </p>
+          </div>
+          <div className="week-summary">
+            <strong>
+              {trainingDays}
+              <span> / 7</span>
+            </strong>
+            <span>days planned</span>
+          </div>
+        </section>
+        <div className="workspace">
+          <ExerciseList
+            exercises={exercises}
+            onAddExercise={handleAddExercise}
+            onAddCustomExercise={onAddCustomExercise}
+            onDeleteExercise={onDeleteExercise}
+          />
+          <Planner
+            routine={routine}
+            handleRemove={handleRemove}
+            onChange={handleRoutineChange}
+          />
+        </div>
+      </main>
+      <footer className="app-footer">
+        <span>Plan. Train. Repeat.</span>
+        <span>Your workout data is saved automatically in your browser.</span>
+      </footer>
     </div>
   );
 }
