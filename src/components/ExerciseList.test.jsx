@@ -39,7 +39,7 @@ describe("Exercise List Component", () => {
         onAddCustomExercise={jest.fn()}
         onAddExercise={jest.fn()}
         onDeleteExercise={jest.fn()}
-      />
+      />,
     );
     mockExercises.forEach((exercise) => {
       expect(screen.getByText(exercise.name)).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe("Exercise List Component", () => {
         onAddCustomExercise={jest.fn()}
         onAddExercise={jest.fn()}
         onDeleteExercise={jest.fn()}
-      />
+      />,
     );
     const searchBar = screen.getByPlaceholderText("Search exercises...");
     await user.type(searchBar, "Pla");
@@ -74,7 +74,7 @@ describe("Exercise List Component", () => {
         onAddCustomExercise={jest.fn()}
         onAddExercise={jest.fn()}
         onDeleteExercise={jest.fn()}
-      />
+      />,
     );
 
     const filterButtonP = screen.getByText("P");
@@ -97,7 +97,7 @@ describe("Exercise List Component", () => {
         onAddCustomExercise={onAddCustomExercise}
         onAddExercise={jest.fn()}
         onDeleteExercise={jest.fn()}
-      />
+      />,
     );
 
     const inputBar = screen.getByPlaceholderText("Exercise name");
@@ -117,11 +117,54 @@ describe("Exercise List Component", () => {
         onAddCustomExercise={jest.fn()}
         onAddExercise={jest.fn()}
         onDeleteExercise={onDeleteExercise}
-      />
+      />,
     );
 
     const deleteButton = screen.getAllByLabelText("Delete exercise");
     await user.click(deleteButton[0]);
     expect(onDeleteExercise).toHaveBeenCalledWith(1);
   });
+});
+
+test("clearing an empty search restores the library and search focus", async () => {
+  const user = userEvent.setup();
+  render(
+    <ExerciseList
+      exercises={mockExercises}
+      onAddCustomExercise={jest.fn()}
+      onAddExercise={jest.fn()}
+      onDeleteExercise={jest.fn()}
+    />,
+  );
+  const search = screen.getByRole("searchbox", { name: "Search exercises" });
+  await user.type(search, "not-a-movement");
+  expect(screen.getByText("No exercises found")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Clear search" }));
+  expect(search).toHaveValue("");
+  expect(search).toHaveFocus();
+  expect(screen.getByText("Squats")).toBeInTheDocument();
+});
+
+test("removing the last exercise for a letter restores the All filter", async () => {
+  const user = userEvent.setup();
+  const props = {
+    onAddCustomExercise: jest.fn(),
+    onAddExercise: jest.fn(),
+    onDeleteExercise: jest.fn(),
+  };
+  const { rerender } = render(
+    <ExerciseList {...props} exercises={mockExercises} />,
+  );
+  await user.click(screen.getByRole("button", { name: "S", exact: true }));
+  expect(screen.queryByText("Push-ups")).not.toBeInTheDocument();
+  rerender(
+    <ExerciseList
+      {...props}
+      exercises={mockExercises.filter((exercise) => exercise.name !== "Squats")}
+    />,
+  );
+  expect(
+    screen.getByRole("button", { name: "All", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByText("Push-ups")).toBeInTheDocument();
 });
