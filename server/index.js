@@ -1,18 +1,15 @@
-import { createServer } from "node:http";
+import express from "express";
 
-const server = createServer((req, res) => {
-  res.setHeader("Content-Type", "application/json");
+const app = express();
 
-  if (req.method === "GET" && req.url === "/api/health") {
-    res.writeHead(200);
-    res.end(JSON.stringify({ status: "ok" }));
-    return;
-  }
-
-  res.writeHead(404);
-  res.end(JSON.stringify({ message: "Route not found" }));
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
 });
 
-server.listen(3001, "127.0.0.1", () => {
-  console.log("Workout API: http://127.0.0.1:3001");
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+app.listen(3001, "127.0.0.1", () => {
+  console.log("Workout API is running on http://127.0.0.1:3001");
 });
