@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Planner from "./components/Planner";
 import ExerciseList from "./components/ExerciseList";
 import defaultExercises from "./data/exercises";
+import { fetchExercises } from "./api/exercises.js";
 
 function App() {
   // define state and load local storage
@@ -9,6 +10,12 @@ function App() {
     const saved = localStorage.getItem("custom-exercises");
     return saved ? JSON.parse(saved) : defaultExercises;
   });
+  const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const [exercisesError, setExercisesError] = useState("");
+  const [hasSavedExercises] = useState(
+    () => localStorage.getItem("custom-exercises") !== null,
+  );
+  const [exerciseRequest, setExerciseRequest] = useState(0);
 
   const [routine, setRoutine] = useState(() => {
     const saved = localStorage.getItem("weekly-plan");
@@ -69,15 +76,42 @@ function App() {
     const newExercise = { id: nextId, name: exercise };
     setExercises((prev) => [...prev, newExercise]);
   };
+  useEffect(() => {
+    const controller = new AbortController();
+    setIsLoadingExercises(true);
+    setExercisesError("");
+    async function loadExercises() {
+      try {
+        const exercises = await fetchExercises(controller.signal);
 
+        if (!controller.signal.aborted && !hasSavedExercises) {
+          setExercises(exercises);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setExercisesError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingExercises(false);
+        }
+      }
+    }
+
+    loadExercises();
+
+    return () => controller.abort();
+  }, [hasSavedExercises, exerciseRequest]);
   // save to local storage
   useEffect(() => {
     localStorage.setItem("weekly-plan", JSON.stringify(routine));
   }, [routine]);
 
   useEffect(() => {
-    localStorage.setItem("custom-exercises", JSON.stringify(exercises));
-  }, [exercises]);
+    if (!isLoadingExercises && !exercisesError) {
+      localStorage.setItem("custom-exercises", JSON.stringify(exercises));
+    }
+  }, [exercises, isLoadingExercises, exercisesError]);
 
   const trainingDays = Object.values(routine).filter(
     (day) => day.length > 0,
@@ -118,12 +152,32 @@ function App() {
           </div>
         </section>
         <div className="workspace">
-          <ExerciseList
-            exercises={exercises}
-            onAddExercise={handleAddExercise}
-            onAddCustomExercise={onAddCustomExercise}
-            onDeleteExercise={onDeleteExercise}
-          />
+          {isLoadingExercises ? (
+            <section className="panel" aria-label="Exercise Library">
+              <div className="panel-heading">
+                <p role="status">Loading exercises…</p>
+              </div>
+            </section>
+          ) : exercisesError ? (
+            <section className="panel" aria-label="Exercise Library">
+              <div className="custom-exercise">
+                <p role="alert">{exercisesError}</p>
+                <button
+                  className="primary-button"
+                  onClick={() => setExerciseRequest((request) => request + 1)}
+                >
+                  Retry
+                </button>
+              </div>
+            </section>
+          ) : (
+            <ExerciseList
+              exercises={exercises}
+              onAddExercise={handleAddExercise}
+              onAddCustomExercise={onAddCustomExercise}
+              onDeleteExercise={onDeleteExercise}
+            />
+          )}
           <Planner
             routine={routine}
             handleRemove={handleRemove}

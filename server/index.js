@@ -1,11 +1,14 @@
 import express from "express";
+import defaultExercises from "../src/data/exercises.js";
 
 const app = express();
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
-
+app.get("/api/exercises", (req, res) => {
+  res.json(defaultExercises);
+});
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
