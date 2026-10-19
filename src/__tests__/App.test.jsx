@@ -1,17 +1,26 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
-import { fetchExercises } from "../api/exercises";
 import defaultExercises from "../data/exercises";
+import {
+  fetchExercises,
+  importExercises,
+  createExercise,
+  deleteExercise,
+} from "../api/exercises";
 
 jest.mock("../api/exercises", () => ({
   fetchExercises: jest.fn(),
+  importExercises: jest.fn(),
+  createExercise: jest.fn(),
+  deleteExercise: jest.fn(),
 }));
 describe("App Integration Tests", () => {
   beforeEach(() => {
     localStorage.clear();
-    fetchExercises.mockReset();
+    jest.resetAllMocks();
     fetchExercises.mockResolvedValue(defaultExercises);
+    importExercises.mockResolvedValue(defaultExercises);
   });
   test("App renders without crashing", async () => {
     render(<App />);
@@ -106,5 +115,70 @@ describe("App Integration Tests", () => {
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(fetchExercises).toHaveBeenCalledTimes(2);
+  });
+  test("preserves the name after a failed create and allows retry", async () => {
+    const user = userEvent.setup();
+
+    createExercise
+      .mockRejectedValueOnce(new Error("Could not add exercise."))
+      .mockResolvedValueOnce({ id: 99, name: "Dips" });
+
+    render(<App />);
+    await screen.findByRole("combobox", { name: "Add Squats to day" });
+
+    const input = screen.getByLabelText("Add New Exercise");
+
+    await user.type(input, "Dips");
+    await user.click(screen.getByRole("button", { name: "Add", exact: true }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not add exercise.",
+    );
+    expect(input).toHaveValue("Dips");
+
+    await user.click(screen.getByRole("button", { name: "Add", exact: true }));
+
+    expect(
+      await screen.findByRole("combobox", { name: "Add Dips to day" }),
+    ).toBeInTheDocument();
+    expect(input).toHaveValue("");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+  test("keeps an exercise after a failed delete and allows retry", async () => {
+    const user = userEvent.setup();
+
+    deleteExercise
+      .mockRejectedValueOnce(new Error("Could not delete exercise."))
+      .mockResolvedValueOnce(undefined);
+
+    render(<App />);
+    await screen.findByRole("combobox", { name: "Add Push-ups to day" });
+
+    await user.click(
+      screen.getAllByRole("button", {
+        name: "Delete exercise",
+        exact: true,
+      })[0],
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not delete exercise.",
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Add Push-ups to day" }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getAllByRole("button", {
+        name: "Delete exercise",
+        exact: true,
+      })[0],
+    );
+
+    await screen.findByText("5");
+    expect(
+      screen.queryByRole("combobox", { name: "Add Push-ups to day" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

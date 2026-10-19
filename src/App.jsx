@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react";
 import Planner from "./components/Planner";
 import ExerciseList from "./components/ExerciseList";
-import defaultExercises from "./data/exercises";
-import { fetchExercises } from "./api/exercises.js";
-
+import {
+  fetchExercises,
+  importExercises,
+  createExercise,
+  deleteExercise,
+} from "./api/exercises.js";
 function App() {
   // define state and load local storage
-  const [exercises, setExercises] = useState(() => {
-    const saved = localStorage.getItem("custom-exercises");
-    return saved ? JSON.parse(saved) : defaultExercises;
-  });
+  const [exercises, setExercises] = useState([]);
   const [isLoadingExercises, setIsLoadingExercises] = useState(true);
   const [exercisesError, setExercisesError] = useState("");
-  const [hasSavedExercises] = useState(
-    () => localStorage.getItem("custom-exercises") !== null,
-  );
+
   const [exerciseRequest, setExerciseRequest] = useState(0);
 
   const [routine, setRoutine] = useState(() => {
@@ -67,24 +65,47 @@ function App() {
     }));
   };
 
-  const onDeleteExercise = (id) => {
-    setExercises((prev) => prev.filter((ex) => ex.id !== id));
+  const onDeleteExercise = async (id) => {
+    await deleteExercise(id);
+
+    setExercises((previous) =>
+      previous.filter((exercise) => exercise.id !== id),
+    );
   };
 
-  const onAddCustomExercise = (exercise) => {
-    let nextId = exercises.length + 1;
-    const newExercise = { id: nextId, name: exercise };
-    setExercises((prev) => [...prev, newExercise]);
+  const onAddCustomExercise = async (name) => {
+    const newExercise = await createExercise(name);
+
+    setExercises((previous) => [...previous, newExercise]);
   };
   useEffect(() => {
     const controller = new AbortController();
+
     setIsLoadingExercises(true);
     setExercisesError("");
+
     async function loadExercises() {
       try {
-        const exercises = await fetchExercises(controller.signal);
+        const saved = localStorage.getItem("custom-exercises");
+        const wasImported =
+          localStorage.getItem("exercise-library-imported") === "true";
 
-        if (!controller.signal.aborted && !hasSavedExercises) {
+        let exercises;
+
+        if (saved !== null && !wasImported) {
+          exercises = await importExercises(
+            JSON.parse(saved),
+            controller.signal,
+          );
+
+          if (!controller.signal.aborted) {
+            localStorage.setItem("exercise-library-imported", "true");
+          }
+        } else {
+          exercises = await fetchExercises(controller.signal);
+        }
+
+        if (!controller.signal.aborted) {
           setExercises(exercises);
         }
       } catch (error) {
@@ -101,18 +122,11 @@ function App() {
     loadExercises();
 
     return () => controller.abort();
-  }, [hasSavedExercises, exerciseRequest]);
-  // save to local storage
+  }, [exerciseRequest]);
+
   useEffect(() => {
     localStorage.setItem("weekly-plan", JSON.stringify(routine));
   }, [routine]);
-
-  useEffect(() => {
-    if (!isLoadingExercises && !exercisesError) {
-      localStorage.setItem("custom-exercises", JSON.stringify(exercises));
-    }
-  }, [exercises, isLoadingExercises, exercisesError]);
-
   const trainingDays = Object.values(routine).filter(
     (day) => day.length > 0,
   ).length;

@@ -16,8 +16,12 @@ export default function ExerciseList({
     "Sunday",
   ];
   const [customExercise, setCustomExercise] = useState("");
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [addExerciseError, setAddExerciseError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [deletingExerciseId, setDeletingExerciseId] = useState(null);
+  const [deleteExerciseError, setDeleteExerciseError] = useState("");
   const searchRef = useRef(null);
   const categories = [
     "All",
@@ -35,14 +39,42 @@ export default function ExerciseList({
       (activeCategory === "All" ||
         ex.name.charAt(0).toUpperCase() === activeCategory),
   );
-  const handleAdd = (event) => {
+  const handleAdd = async (event) => {
     event.preventDefault();
-    if (customExercise.trim()) {
-      onAddCustomExercise(customExercise.trim());
+
+    const name = customExercise.trim();
+
+    if (!name || isAddingExercise) return;
+
+    setIsAddingExercise(true);
+    setAddExerciseError("");
+
+    try {
+      await onAddCustomExercise(name);
       setCustomExercise("");
+    } catch (error) {
+      setAddExerciseError(error.message || "Could not add exercise.");
+    } finally {
+      setIsAddingExercise(false);
     }
   };
 
+  const handleDelete = async (id) => {
+    if (deletingExerciseId !== null) return;
+
+    setDeletingExerciseId(id);
+    setDeleteExerciseError("");
+
+    try {
+      await onDeleteExercise(id);
+    } catch (error) {
+      setDeleteExerciseError(
+        error.message || "Could not delete exercise. Please try again.",
+      );
+    } finally {
+      setDeletingExerciseId(null);
+    }
+  };
   return (
     <aside className="library panel" aria-labelledby="library-title">
       <div className="panel-heading">
@@ -107,7 +139,9 @@ export default function ExerciseList({
                 <p>{ex.name}</p>
                 <button
                   className="icon-button delete-button"
-                  onClick={() => onDeleteExercise(ex.id)}
+                  onClick={() => handleDelete(ex.id)}
+                  disabled={deletingExerciseId !== null}
+                  aria-busy={deletingExerciseId === ex.id}
                   aria-label="Delete exercise"
                   title={`Delete ${ex.name} from library`}
                 >
@@ -133,6 +167,9 @@ export default function ExerciseList({
           ))
         )}
       </div>
+      {deletingExerciseId !== null && <p role="status">Deleting exercise…</p>}
+
+      {deleteExerciseError && <p role="alert">{deleteExerciseError}</p>}
       <form className="custom-exercise" noValidate onSubmit={handleAdd}>
         <label htmlFor="custom-exercise">Add New Exercise</label>
         <p>Missing a movement? Add it to your library.</p>
@@ -140,13 +177,28 @@ export default function ExerciseList({
           <input
             id="custom-exercise"
             placeholder="Exercise name"
+            disabled={isAddingExercise}
+            aria-describedby={
+              addExerciseError ? "add-exercise-error" : undefined
+            }
             value={customExercise}
             onChange={(e) => setCustomExercise(e.target.value)}
           />
-          <button className="primary-button" disabled={!customExercise.trim()}>
+          <button
+            type="submit"
+            className="primary-button"
+            disabled={!customExercise.trim() || isAddingExercise}
+          >
             Add
           </button>
         </div>
+        {isAddingExercise && <p role="status">Adding exercise…</p>}
+
+        {addExerciseError && (
+          <p id="add-exercise-error" role="alert">
+            {addExerciseError}
+          </p>
+        )}
       </form>
     </aside>
   );
