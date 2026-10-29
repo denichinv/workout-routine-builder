@@ -1,5 +1,6 @@
 import express from "express";
-import database from "./database.js";
+import process from "node:process";
+import database from "./turso.js";
 
 const app = express();
 app.use(express.json({ limit: "10kb" }));
@@ -7,15 +8,16 @@ app.use(express.json({ limit: "10kb" }));
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
-app.get("/api/exercises", (req, res) => {
-  const exercises = database
-    .prepare("SELECT id, name FROM exercises ORDER BY id")
-    .all();
 
-  res.json(exercises);
+app.get("/api/exercises", async (req, res) => {
+  const result = await database.execute(
+    "SELECT id, name FROM exercises ORDER BY id",
+  );
+
+  res.json(result.rows);
 });
 
-app.post("/api/exercises", (req, res) => {
+app.post("/api/exercises", async (req, res) => {
   const name = req.body?.name;
 
   if (typeof name !== "string") {
@@ -32,16 +34,18 @@ app.post("/api/exercises", (req, res) => {
     });
   }
 
-  const result = database
-    .prepare("INSERT INTO exercises (name) VALUES (?)")
-    .run(trimmedName);
+  const result = await database.execute({
+    sql: "INSERT INTO exercises (name) VALUES (?)",
+    args: [trimmedName],
+  });
 
   res.status(201).json({
     id: Number(result.lastInsertRowid),
     name: trimmedName,
   });
 });
-app.post("/api/exercises/import", (req, res) => {
+
+app.post("/api/exercises/import", async (req, res) => {
   const exercises = req.body?.exercises;
 
   const isValid =
@@ -59,46 +63,51 @@ app.post("/api/exercises/import", (req, res) => {
     });
   }
 
-  try {
-    database.exec("BEGIN");
+  let transaction;
 
-    const existingExercises = database
-      .prepare("SELECT id, name FROM exercises ORDER BY id")
-      .all();
+  try {
+    transaction = await database.transaction("write");
+
+    const existing = await transaction.execute("SELECT name FROM exercises");
 
     const existingNames = new Set(
-      existingExercises.map((exercise) => exercise.name.trim().toLowerCase()),
+      existing.rows.map((exercise) => exercise.name.trim().toLowerCase()),
     );
-
-    const insert = database.prepare("INSERT INTO exercises (name) VALUES (?)");
 
     for (const exercise of exercises) {
       const name = exercise.name.trim();
       const normalizedName = name.toLowerCase();
 
       if (!existingNames.has(normalizedName)) {
-        insert.run(name);
+        await transaction.execute({
+          sql: "INSERT INTO exercises (name) VALUES (?)",
+          args: [name],
+        });
+
         existingNames.add(normalizedName);
       }
     }
 
-    const updatedExercises = database
-      .prepare("SELECT id, name FROM exercises ORDER BY id")
-      .all();
+    const result = await transaction.execute(
+      "SELECT id, name FROM exercises ORDER BY id",
+    );
 
-    database.exec("COMMIT");
-    res.json(updatedExercises);
+    await transaction.commit();
+
+    res.json(result.rows);
   } catch {
-    if (database.isTransaction) {
-      database.exec("ROLLBACK");
+    if (transaction && !transaction.closed) {
+      await transaction.rollback();
     }
 
     res.status(500).json({
       message: "Could not import exercises. Please try again.",
     });
+  } finally {
+    transaction?.close();
   }
 });
-app.delete("/api/exercises/:id", (req, res) => {
+app.delete("/api/exercises/:id", async (req, res) => {
   const id = Number(req.params.id);
 
   if (!Number.isSafeInteger(id) || id <= 0) {
@@ -107,9 +116,12 @@ app.delete("/api/exercises/:id", (req, res) => {
     });
   }
 
-  const result = database.prepare("DELETE FROM exercises WHERE id = ?").run(id);
+  const result = await database.execute({
+    sql: "DELETE FROM exercises WHERE id = ?",
+    args: [id],
+  });
 
-  if (result.changes === 0) {
+  if (result.rowsAffected === 0) {
     return res.status(404).json({
       message: "Exercise not found.",
     });
@@ -117,10 +129,28 @@ app.delete("/api/exercises/:id", (req, res) => {
 
   res.status(204).end();
 });
+
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-app.listen(3001, "127.0.0.1", () => {
-  console.log("Workout API is running on http://127.0.0.1:3001");
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+
+  const status = error.status === 400 || error.status === 413 ? error.status : 500;
+  const message =
+    status === 400
+      ? "Invalid JSON request."
+      : status === 413
+        ? "Request body is too large."
+        : "Could not complete the request. Please try again.";
+
+  res.status(status).json({ message });
+});
+
+const port = Number(process.env.PORT || 3001);
+const host = process.env.HOST || "127.0.0.1";
+
+app.listen(port, host, () => {
+  console.log(`Workout API is running on http://${host}:${port}`);
 });

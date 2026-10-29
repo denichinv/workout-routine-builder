@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 # Local database files
 /server/data/
+
+# Local environment variables
+.env
+.env.*
+!.env.example
