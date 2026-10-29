@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import Planner from "./components/Planner";
 import ExerciseList from "./components/ExerciseList";
-import defaultExercises from "./data/exercises";
-
+import {
+  fetchExercises,
+  importExercises,
+  createExercise,
+  deleteExercise,
+} from "./api/exercises.js";
 function App() {
   // define state and load local storage
-  const [exercises, setExercises] = useState(() => {
-    const saved = localStorage.getItem("custom-exercises");
-    return saved ? JSON.parse(saved) : defaultExercises;
-  });
+  const [exercises, setExercises] = useState([]);
+  const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const [exercisesError, setExercisesError] = useState("");
+
+  const [exerciseRequest, setExerciseRequest] = useState(0);
 
   const [routine, setRoutine] = useState(() => {
     const saved = localStorage.getItem("weekly-plan");
@@ -60,25 +65,68 @@ function App() {
     }));
   };
 
-  const onDeleteExercise = (id) => {
-    setExercises((prev) => prev.filter((ex) => ex.id !== id));
+  const onDeleteExercise = async (id) => {
+    await deleteExercise(id);
+
+    setExercises((previous) =>
+      previous.filter((exercise) => exercise.id !== id),
+    );
   };
 
-  const onAddCustomExercise = (exercise) => {
-    let nextId = exercises.length + 1;
-    const newExercise = { id: nextId, name: exercise };
-    setExercises((prev) => [...prev, newExercise]);
-  };
+  const onAddCustomExercise = async (name) => {
+    const newExercise = await createExercise(name);
 
-  // save to local storage
+    setExercises((previous) => [...previous, newExercise]);
+  };
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setIsLoadingExercises(true);
+    setExercisesError("");
+
+    async function loadExercises() {
+      try {
+        const saved = localStorage.getItem("custom-exercises");
+        const wasImported =
+          localStorage.getItem("exercise-library-imported") === "true";
+
+        let exercises;
+
+        if (saved !== null && !wasImported) {
+          exercises = await importExercises(
+            JSON.parse(saved),
+            controller.signal,
+          );
+
+          if (!controller.signal.aborted) {
+            localStorage.setItem("exercise-library-imported", "true");
+          }
+        } else {
+          exercises = await fetchExercises(controller.signal);
+        }
+
+        if (!controller.signal.aborted) {
+          setExercises(exercises);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setExercisesError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingExercises(false);
+        }
+      }
+    }
+
+    loadExercises();
+
+    return () => controller.abort();
+  }, [exerciseRequest]);
+
   useEffect(() => {
     localStorage.setItem("weekly-plan", JSON.stringify(routine));
   }, [routine]);
-
-  useEffect(() => {
-    localStorage.setItem("custom-exercises", JSON.stringify(exercises));
-  }, [exercises]);
-
   const trainingDays = Object.values(routine).filter(
     (day) => day.length > 0,
   ).length;
@@ -118,12 +166,32 @@ function App() {
           </div>
         </section>
         <div className="workspace">
-          <ExerciseList
-            exercises={exercises}
-            onAddExercise={handleAddExercise}
-            onAddCustomExercise={onAddCustomExercise}
-            onDeleteExercise={onDeleteExercise}
-          />
+          {isLoadingExercises ? (
+            <section className="panel" aria-label="Exercise Library">
+              <div className="panel-heading">
+                <p role="status">Loading exercises…</p>
+              </div>
+            </section>
+          ) : exercisesError ? (
+            <section className="panel" aria-label="Exercise Library">
+              <div className="custom-exercise">
+                <p role="alert">{exercisesError}</p>
+                <button
+                  className="primary-button"
+                  onClick={() => setExerciseRequest((request) => request + 1)}
+                >
+                  Retry
+                </button>
+              </div>
+            </section>
+          ) : (
+            <ExerciseList
+              exercises={exercises}
+              onAddExercise={handleAddExercise}
+              onAddCustomExercise={onAddCustomExercise}
+              onDeleteExercise={onDeleteExercise}
+            />
+          )}
           <Planner
             routine={routine}
             handleRemove={handleRemove}
