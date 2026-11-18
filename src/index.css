@@ -533,6 +533,7 @@ h1 {
     padding: 0 20px;
   }
   .app-header {
+    flex-wrap: wrap;
     min-height: 72px;
   }
   .wordmark-light {

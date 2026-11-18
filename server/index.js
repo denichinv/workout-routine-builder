@@ -1,9 +1,37 @@
 import express from "express";
 import process from "node:process";
 import database from "./turso.js";
+import { verifyGoogleIdToken } from "./google-auth.js";
 
 const app = express();
 app.use(express.json({ limit: "10kb" }));
+
+const appOrigin = process.env.APP_ORIGIN?.trim();
+
+app.post("/api/auth/google", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (!appOrigin || req.get("Origin") !== appOrigin) {
+    return res.status(403).json({ message: "Origin not allowed." });
+  }
+
+  if (!req.is("application/json")) {
+    return res.status(415).json({ message: "Expected JSON." });
+  }
+
+  const credential = req.body?.credential;
+  if (typeof credential !== "string" || !credential.trim()) {
+    return res.status(400).json({ message: "Google credential is required." });
+  }
+
+  try {
+    await verifyGoogleIdToken(credential);
+  } catch {
+    return res.status(401).json({ message: "Google verification failed." });
+  }
+
+  return res.status(204).end();
+});
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok" });
@@ -137,7 +165,8 @@ app.use((req, res) => {
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
 
-  const status = error.status === 400 || error.status === 413 ? error.status : 500;
+  const status =
+    error.status === 400 || error.status === 413 ? error.status : 500;
   const message =
     status === 400
       ? "Invalid JSON request."
