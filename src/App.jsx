@@ -7,7 +7,7 @@ import {
   createExercise,
   deleteExercise,
 } from "./api/exercises.js";
-import GoogleSignIn from "./components/GoogleSignIn";
+import AccountControls from "./components/AccountControls";
 function App({ googleClientId }) {
   // define state and load local storage
   const [exercises, setExercises] = useState([]);
@@ -146,11 +146,7 @@ function App({ googleClientId }) {
           </span>
           WORKOUT<span className="wordmark-light"> / ROUTINE BUILDER</span>
         </div>
-        {googleClientId ? (
-          <GoogleSignIn clientId={googleClientId} />
-        ) : (
-          <span className="storage-note">Stored on this device</span>
-        )}
+        <AccountControls clientId={googleClientId} />
       </header>
       <main>
         <section className="page-intro" aria-labelledby="page-title">

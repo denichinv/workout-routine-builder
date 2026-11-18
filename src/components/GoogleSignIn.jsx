@@ -15,7 +15,7 @@ function loadGoogleSignIn() {
   return googleScript;
 }
 
-export default function GoogleSignIn({ clientId }) {
+export default function GoogleSignIn({ clientId, onSignedIn }) {
   const buttonRef = useRef(null);
   const [status, setStatus] = useState("");
 
@@ -38,7 +38,7 @@ export default function GoogleSignIn({ clientId }) {
           throw new Error("Google verification failed.");
         }
 
-        if (active) setStatus("Google identity verified.");
+        if (active) onSignedIn();
       } catch {
         if (active)
           setStatus("Could not verify your Google account. Try again.");
@@ -84,7 +84,7 @@ export default function GoogleSignIn({ clientId }) {
       active = false;
       buttonContainer.replaceChildren();
     };
-  }, [clientId]);
+  }, [clientId, onSignedIn]);
 
   return (
     <div>
