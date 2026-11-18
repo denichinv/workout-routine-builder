@@ -1,10 +1,153 @@
 import express from "express";
 import process from "node:process";
 import database from "./turso.js";
+import { verifyGoogleIdToken } from "./google-auth.js";
+import { createHash, randomBytes } from "node:crypto";
+import cookieParser from "cookie-parser";
+import {
+  createSession,
+  getSessionUserId,
+  deleteSession,
+  SESSION_MAX_AGE,
+} from "./sessions.js";
 
 const app = express();
 app.use(express.json({ limit: "10kb" }));
 
+app.use(cookieParser());
+
+const appOrigin = process.env.APP_ORIGIN?.trim();
+
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+};
+
+const challengeCookieOptions = {
+  ...sessionCookieOptions,
+  path: "/api/auth/google",
+};
+
+app.post("/api/auth/google/challenge", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (!appOrigin || req.get("Origin") !== appOrigin) {
+    return res.status(403).json({ message: "Origin not allowed." });
+  }
+
+  const challengeToken = randomBytes(32).toString("base64url");
+  const nonce = createHash("sha256").update(challengeToken).digest("hex");
+  const now = Date.now();
+  const maxAge = 10 * 60 * 1000;
+
+  await database.batch(
+    [
+      {
+        sql: "DELETE FROM google_login_challenges WHERE expires_at <= ?",
+        args: [now],
+      },
+      {
+        sql: "INSERT INTO google_login_challenges (nonce, expires_at) VALUES (?, ?)",
+        args: [nonce, now + maxAge],
+      },
+    ],
+    "write",
+  );
+
+  res.cookie("google_login_challenge", challengeToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/api/auth/google",
+    maxAge,
+  });
+
+  return res.json({ nonce });
+});
+
+app.post("/api/auth/google", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (!appOrigin || req.get("Origin") !== appOrigin) {
+    return res.status(403).json({ message: "Origin not allowed." });
+  }
+
+  if (!req.is("application/json")) {
+    return res.status(415).json({ message: "Expected JSON." });
+  }
+
+  const credential = req.body?.credential;
+  if (typeof credential !== "string" || !credential.trim()) {
+    return res.status(400).json({ message: "Google credential is required." });
+  }
+
+  const challengeToken = req.cookies.google_login_challenge;
+  const expiredChallenge = {
+    message: "Google sign-in expired. Refresh and try again.",
+  };
+
+  if (typeof challengeToken !== "string" || !challengeToken) {
+    return res.status(401).json(expiredChallenge);
+  }
+
+  const nonce = createHash("sha256").update(challengeToken).digest("hex");
+
+  let googleUserId;
+  try {
+    googleUserId = await verifyGoogleIdToken(credential, nonce);
+  } catch {
+    return res.status(401).json({ message: "Google verification failed." });
+  }
+
+  const transaction = await database.transaction("write");
+
+  try {
+    const challenge = await transaction.execute({
+      sql: "DELETE FROM google_login_challenges WHERE nonce = ? AND expires_at > ?",
+      args: [nonce, Date.now()],
+    });
+
+    if (challenge.rowsAffected !== 1) {
+      return res.status(401).json(expiredChallenge);
+    }
+
+    const sessionToken = await createSession(googleUserId, transaction);
+    await transaction.commit();
+
+    res.clearCookie("google_login_challenge", challengeCookieOptions);
+    res.cookie("workout_session", sessionToken, {
+      ...sessionCookieOptions,
+      maxAge: SESSION_MAX_AGE,
+    });
+
+    return res.status(204).end();
+  } finally {
+    transaction.close();
+  }
+});
+
+app.get("/api/auth/session", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  const googleUserId = await getSessionUserId(req.cookies.workout_session);
+
+  return res.json({ signedIn: Boolean(googleUserId) });
+});
+
+app.post("/api/auth/logout", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (!appOrigin || req.get("Origin") !== appOrigin) {
+    return res.status(403).json({ message: "Origin not allowed." });
+  }
+
+  await deleteSession(req.cookies.workout_session);
+  res.clearCookie("workout_session", sessionCookieOptions);
+
+  return res.status(204).end();
+});
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
@@ -137,7 +280,8 @@ app.use((req, res) => {
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
 
-  const status = error.status === 400 || error.status === 413 ? error.status : 500;
+  const status =
+    error.status === 400 || error.status === 413 ? error.status : 500;
   const message =
     status === 400
       ? "Invalid JSON request."

@@ -7,7 +7,8 @@ import {
   createExercise,
   deleteExercise,
 } from "./api/exercises.js";
-function App() {
+import AccountControls from "./components/AccountControls";
+function App({ googleClientId }) {
   // define state and load local storage
   const [exercises, setExercises] = useState([]);
   const [isLoadingExercises, setIsLoadingExercises] = useState(true);
@@ -145,7 +146,7 @@ function App() {
           </span>
           WORKOUT<span className="wordmark-light"> / ROUTINE BUILDER</span>
         </div>
-        <span className="storage-note">Stored on this device</span>
+        <AccountControls clientId={googleClientId} />
       </header>
       <main>
         <section className="page-intro" aria-labelledby="page-title">
