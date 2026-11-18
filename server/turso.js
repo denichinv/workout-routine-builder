@@ -20,4 +20,18 @@ await database.execute(`
     name TEXT NOT NULL CHECK (length(trim(name)) > 0)
   )
 `);
+await database.execute(`
+  CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY NOT NULL,
+    google_user_id TEXT NOT NULL,
+    expires_at INTEGER NOT NULL
+  )
+`);
+
+await database.execute(`
+  CREATE TABLE IF NOT EXISTS google_login_challenges (
+    nonce TEXT PRIMARY KEY NOT NULL,
+    expires_at INTEGER NOT NULL
+  )
+`);
 export default database;

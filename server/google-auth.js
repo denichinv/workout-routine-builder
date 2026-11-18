@@ -9,17 +9,17 @@ if (!clientId) {
 
 const googleClient = new OAuth2Client();
 
-export async function verifyGoogleIdToken(credential) {
+export async function verifyGoogleIdToken(credential, expectedNonce) {
   const ticket = await googleClient.verifyIdToken({
     idToken: credential,
     audience: clientId,
   });
 
-  const googleUserId = ticket.getPayload()?.sub;
+  const payload = ticket.getPayload();
 
-  if (!googleUserId) {
-    throw new Error("Google ID token is missing a user ID.");
+  if (!payload?.sub || !expectedNonce || payload.nonce !== expectedNonce) {
+    throw new Error("Google ID token does not match this sign-in attempt.");
   }
 
-  return googleUserId;
+  return payload.sub;
 }
